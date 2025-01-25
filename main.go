@@ -6,7 +6,9 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/twilio/twilio-go"
 	"github.com/twilio/twilio-go/client/jwt"
+	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
 )
 
 type VoiceResponse struct {
@@ -81,4 +83,29 @@ func handleInboundCall(c *gin.Context) {
 
 	c.Header("Content-Type", "text/xml")
 	c.String(http.StatusOK, twiml)
+}
+
+func handleOutboundCall(c *gin.Context) {
+	from := os.Getenv("TWILIO_FROM_PHONE_NUMBER")
+	to := c.PostForm("To")
+	if to == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "To parameter is required"})
+		return
+	}
+	//from := c.PostForm("From")
+
+	client := twilio.NewRestClient()
+	params := &twilioApi.CreateCallParams{}
+	params.SetTo(to)
+	params.SetFrom(from)
+	params.SetUrl(fmt.Sprintf("%s/voice/callbacks", os.Getenv("APP_BASE_URL")))
+
+	resp, err := client.Api.CreateCall(params)
+	if err != nil {
+		fmt.Println(err.Error())
+	} else {
+		fmt.Println("Call Status: " + *resp.Status)
+		fmt.Println("Call Sid: " + *resp.Sid)
+		fmt.Println("Call Direction: " + *resp.Direction)
+	}
 }
