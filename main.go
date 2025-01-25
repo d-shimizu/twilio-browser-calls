@@ -24,15 +24,15 @@ type TwilioGrant struct {
 func main() {
 	router := gin.Default()
 
-	//router.Static("/static", "./static")
-	//router.LoadHTMLGlob("templates/*")
+	router.Static("/static", "./static")
+	router.LoadHTMLGlob("templates/*")
 
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", nil)
 	})
 
-	router.POST("/token", generateToken)
-	router.POST("/voice", handleVoice)
+	router.POST("/voice/token", generateToken)
+	router.POST("/voice/incomming-calls", handleInboundCall)
 
 	router.Run(":3000")
 }
@@ -71,11 +71,11 @@ func generateToken(c *gin.Context) {
 	})
 }
 
-func handleVoice(c *gin.Context) {
+func handleInboundCall(c *gin.Context) {
 	twiml := `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Dial>
-        <Client>+8105012345678</Client>
+        <Client>+815012345678</Client>
     </Dial>
 </Response>`
 
