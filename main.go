@@ -34,7 +34,8 @@ func main() {
 	})
 
 	router.POST("/voice/token", generateToken)
-	router.POST("/voice/incomming-calls", handleInboundCall)
+	router.POST("/voice/incomming-calls", handleIncommingCall)
+	router.POST("/voice/outbound-calls", handleOutboundCall)
 
 	router.Run(":3000")
 }
@@ -44,7 +45,7 @@ func generateToken(c *gin.Context) {
 	apiKey := os.Getenv("TWILIO_API_KEY")
 	apiSecret := os.Getenv("TWILIO_API_SECRET")
 	applicationSid := os.Getenv("TWILIO_TWIML_APP_SID")
-	identity := "+815012345678"
+	identity := "user123"
 
 	params := jwt.AccessTokenParams{
 		AccountSid:    accountSid,
@@ -73,26 +74,29 @@ func generateToken(c *gin.Context) {
 	})
 }
 
-func handleInboundCall(c *gin.Context) {
+func handleIncommingCall(c *gin.Context) {
 	twiml := `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Dial>
-        <Client>+815012345678</Client>
+    <Say language="ja-JP">着信がありました</Say>
+    <Dial timeout="20">
+        <Client>user123</Client>
     </Dial>
+    <Say language="ja-JP">応答がありませんでした</Say>
 </Response>`
 
+	//c.Header("Content-Type", "application/xml")
 	c.Header("Content-Type", "text/xml")
 	c.String(http.StatusOK, twiml)
 }
 
 func handleOutboundCall(c *gin.Context) {
 	from := os.Getenv("TWILIO_FROM_PHONE_NUMBER")
+	//from := c.PostForm("From")
 	to := c.PostForm("To")
 	if to == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "To parameter is required"})
 		return
 	}
-	//from := c.PostForm("From")
 
 	client := twilio.NewRestClient()
 	params := &twilioApi.CreateCallParams{}
